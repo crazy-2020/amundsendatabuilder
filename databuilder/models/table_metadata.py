@@ -551,21 +551,29 @@ class TableMetadata(GraphSerializable, TableSerializable):
         except StopIteration:
             return None
 
-    def _create_record_iterator(self) -> Iterator[RDSModel]:  # noqa: C901
+    def _create_record_iterator(self) -> Iterator[RDSModel]:
         # Database, Cluster, Schema
-        others = [
-            (self._get_database_key(),
-             RDSDatabase(rk=self._get_database_key(), name=self.database)),
-            (self._get_cluster_key(),
-             RDSCluster(rk=self._get_cluster_key(), name=self.cluster, database_rk=self._get_database_key())),
-            (self._get_schema_key(),
-             RDSSchema(rk=self._get_schema_key(), name=self.schema, cluster_rk=self._get_cluster_key()))
+        others: List[RDSModel] = [
+            RDSDatabase(
+                rk=self._get_database_key(),
+                name=self.database
+            ),
+            RDSCluster(
+                rk=self._get_cluster_key(),
+                name=self.cluster,
+                database_rk=self._get_database_key()
+            ),
+            RDSSchema(
+                rk=self._get_schema_key(),
+                name=self.schema,
+                cluster_rk=self._get_cluster_key()
+            )
         ]
 
-        for record_tuple in others:
-            if record_tuple[0] not in TableMetadata.serialized_records_keys:
-                TableMetadata.serialized_records_keys.add(record_tuple[0])
-                yield record_tuple[1]
+        for record in others:
+            if record.rk not in TableMetadata.serialized_records_keys:
+                TableMetadata.serialized_records_keys.add(record.rk)
+                yield record
 
         # Table
         yield RDSTable(
@@ -575,7 +583,7 @@ class TableMetadata(GraphSerializable, TableSerializable):
             schema_rk=self._get_schema_key()
         )
 
-        # Description
+        # Table description
         if self.description:
             description_record_key = self._get_table_description_key(self.description)
             if self.description.label == DescriptionMetadata.DESCRIPTION_NODE_LABEL:
@@ -598,13 +606,13 @@ class TableMetadata(GraphSerializable, TableSerializable):
             tag_record = TagMetadata(tag).get_record()
             yield tag_record
 
-        for tag in self.tags:
-            yield RDSTableTag(
+            table_tag_record = RDSTableTag(
                 table_rk=self._get_table_key(),
                 tag_rk=TagMetadata.get_tag_key(tag)
             )
+            yield table_tag_record
 
-        # column
+        # Column
         for col in self.columns:
             yield RDSTableColumn(
                 rk=self._get_col_key(col),
@@ -629,13 +637,13 @@ class TableMetadata(GraphSerializable, TableSerializable):
                     start_key=self._get_col_key(col),
                     badges=col.badges
                 )
+
                 badge_records = badge_metadata.get_badge_records()
                 for badge_record in badge_records:
                     yield badge_record
 
-                for badge in col.badges:
                     column_badge_record = RDSColumnBadge(
                         column_rk=self._get_col_key(col),
-                        badge_rk=badge_metadata.get_badge_key(badge.name),
+                        badge_rk=badge_record.rk
                     )
                     yield column_badge_record
