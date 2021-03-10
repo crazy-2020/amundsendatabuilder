@@ -114,10 +114,10 @@ class TableColumnUsage(GraphSerializable, TableSerializable):
                 user_record = User(email=col_reader.user_email).get_user_record()
                 yield user_record
 
-        for col_reader in self.col_readers:
-            yield RDSTableUsage(user_rk=self._get_user_key(col_reader.user_email),
-                                table_rk=self._get_table_key(col_reader),
-                                read_count=col_reader.read_count)
+            table_usage_record = RDSTableUsage(user_rk=self._get_user_key(col_reader.user_email),
+                                               table_rk=self._get_table_key(col_reader),
+                                               read_count=col_reader.read_count)
+            yield table_usage_record
 
     def _get_table_key(self, col_reader: ColumnReader) -> str:
         return TableMetadata.TABLE_KEY_FORMAT.format(db=col_reader.database,

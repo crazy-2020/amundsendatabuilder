@@ -111,12 +111,11 @@ class TableOwner(GraphSerializable, TableSerializable):
                 )
                 yield user_record
 
-        for owner in self.owners:
-            table_owner_record = RDSTableOwner(
-                table_rk=self.get_metadata_model_key(),
-                user_rk=self.get_owner_model_key(owner)
-            )
-            yield table_owner_record
+                table_owner_record = RDSTableOwner(
+                    table_rk=self.get_metadata_model_key(),
+                    user_rk=self.get_owner_model_key(owner)
+                )
+                yield table_owner_record
 
     def __repr__(self) -> str:
         return f'TableOwner({self.db!r}, {self.cluster!r}, {self.schema!r}, {self.table!r}, {self.owners!r})'

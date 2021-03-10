@@ -116,6 +116,9 @@ class Watermark(GraphSerializable, TableSerializable):
         yield relation
 
     def _create_next_record(self) -> Iterator[RDSModel]:
+        """
+        Create watermark records
+        """
         for part in self.parts:
             part_record = RDSTableWatermark(
                 rk=self.get_watermark_model_key(),

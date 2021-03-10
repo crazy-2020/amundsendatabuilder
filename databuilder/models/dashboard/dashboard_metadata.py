@@ -86,7 +86,7 @@ class DashboardMetadata(GraphSerializable, TableSerializable):
         self.dashboard_group_id = dashboard_group_id if dashboard_group_id else dashboard_group
         self.dashboard_id = dashboard_id if dashboard_id else dashboard_name
         self.description = description
-        self.tags = tags if tags else []
+        self.tags = tags
         self.product = product
         self.cluster = cluster
         self.dashboard_group_description = dashboard_group_description
@@ -350,11 +350,16 @@ class DashboardMetadata(GraphSerializable, TableSerializable):
             )
 
         # Dashboard tag
-        for tag in self.tags:
-            yield RDSTag(
-                rk=TagMetadata.get_tag_key(tag),
-                tag_type='dashboard',
-            )
-        for tag in self.tags:
-            yield RDSDashboardTag(dashboard_rk=self._get_dashboard_key(),
-                                  tag_rk=TagMetadata.get_tag_key(tag))
+        if self.tags:
+            for tag in self.tags:
+                tag_record = RDSTag(
+                    rk=TagMetadata.get_tag_key(tag),
+                    tag_type='dashboard',
+                )
+                yield tag_record
+
+                dashboard_tag_record = RDSDashboardTag(
+                    dashboard_rk=self._get_dashboard_key(),
+                    tag_rk=TagMetadata.get_tag_key(tag)
+                )
+                yield dashboard_tag_record
