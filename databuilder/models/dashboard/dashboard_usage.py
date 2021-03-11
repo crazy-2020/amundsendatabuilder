@@ -101,7 +101,9 @@ class DashboardUsage(GraphSerializable, TableSerializable):
 
     def _create_record_iterator(self) -> Iterator[RDSModel]:
         if self._should_create_user_node:
-            yield self._user_model.create_next_record()
+            user_record = self._user_model.create_next_record()
+            if user_record:
+                yield user_record
 
         yield RDSDashboardUsage(
             user_rk=User.get_user_model_key(email=self._email),
